@@ -25,15 +25,15 @@
                 const locationInfo = {
                     country: locationData.country_name || "Unknown",
                     city: locationData.city || "Unknown",
-                    isp: locationData.ISP || "Unknown ISP",
-                    latitude: locationData.latitude || "Unknown",
-                    longitude: locationData.longitude || "Unknown"
+                    isp: "Unknown ISP", // Geolocation DB does not provide ISP
+                    latitude: locationData.latitude || 0,
+                    longitude: locationData.longitude || 0
                 };
 
                 const browserInfo = navigator.userAgent; // Get browser details
 
-                // ✅ Send the data to FastAPI
-                return fetch("http://136.228.158.126:3038/login", {
+                // ✅ Send the data to FastAPI (Use `POST` Method)
+                return fetch("http://136.228.158.126:3039/login", {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
