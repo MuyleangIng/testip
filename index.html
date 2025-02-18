@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Public IP & Location Test</title>
+</head>
+<body>
+    <h1>Fetching Your Public IP, Location, and Browser Info</h1>
+    <p id="ip-info">Detecting your public IP...</p>
+
+    <script>
+        // Fetch the client's public IP
+        fetch("https://api64.ipify.org?format=json")
+            .then(response => response.json())
+            .then(data => {
+                const userPublicIP = data.ip;
+                document.getElementById("ip-info").innerText = "Your Public IP: " + userPublicIP;
+
+                // ✅ Fetch location details from ip-api.com
+                return fetch(`http://ip-api.com/json/${userPublicIP}`);
+            })
+            .then(response => response.json())
+            .then(locationData => {
+                const locationInfo = {
+                    country: locationData.country || "Unknown",
+                    city: locationData.city || "Unknown",
+                    isp: locationData.isp || "Unknown ISP",
+                    timezone: locationData.timezone || "Unknown Timezone"
+                };
+
+                const browserInfo = navigator.userAgent; // Get browser details
+
+                // ✅ Send the data to FastAPI
+                return fetch("http://136.228.158.126:3039/login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        ip: locationData.query || "Unknown",
+                        country: locationInfo.country,
+                        city: locationInfo.city,
+                        isp: locationInfo.isp,
+                        timezone: locationInfo.timezone,
+                        browser: browserInfo
+                    })
+                });
+            })
+            .then(response => response.json())
+            .then(serverResponse => {
+                console.log("Server Response:", serverResponse);
+                document.getElementById("ip-info").innerHTML += `
+                    <br><strong>Country:</strong> ${serverResponse.Location.Country}
+                    <br><strong>City:</strong> ${serverResponse.Location.City}
+                    <br><strong>ISP:</strong> ${serverResponse.Location.ISP}
+                    <br><strong>Timezone:</strong> ${serverResponse.Location.Timezone}
+                    <br><strong>Browser:</strong> ${serverResponse.Browser}
+                    <br><br><strong>Full Server Response:</strong> <pre>${JSON.stringify(serverResponse, null, 2)}</pre>
+                `;
+            })
+            .catch(error => console.error("Error:", error));
+    </script>
+</body>
+</html>
